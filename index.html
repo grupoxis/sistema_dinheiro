@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Gastos por Voz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .total {
+            font-size: 1.5em;
+            text-align: center;
+            background: #27ae60;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .voice-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .voice-btn.listening {
+            background: #e74c3c;
+        }
+        .status {
+            text-align: center;
+            margin: 10px 0;
+            font-style: italic;
+        }
+        .manual-input {
+            display: flex;
+            gap: 5px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        .manual-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        .manual-input button {
+            padding: 10px 20px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .expense-list {
+            list-style: none;
+            padding: 0;
+        }
+        .expense-item {
+            background: #ecf0f1;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .expense-item .date {
+            font-size: 0.8em;
+            color: #7f8c8d;
+        }
+        .expense-item .value {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .clear-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+            width: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gastos por Voz</h1>
+        <div class="total" id="totalDisplay">Total: R$ 0,00</div>
+
+        <button class="voice-btn" id="voiceBtn">🎤 Iniciar Escuta</button>
+        <div class="status" id="status">Clique no botão e fale: "gastei 50 reais no supermercado"</div>
+
+        <!-- Entrada manual (alternativa) -->
+        <div class="manual-input">
+            <input type="text" id="manualLocal" placeholder="Local (ex: Supermercado Araújo)">
+            <input type="number" id="manualValue" placeholder="Valor (ex: 50)" step="0.01">
+            <button id="manualAddBtn">➕ Adicionar</button>
+        </div>
+
+        <ul class="expense-list" id="expenseList"></ul>
+
+        <button class="clear-btn" id="clearBtn">🧹 Limpar Todos os Gastos</button>
+    </div>
+
+    <script>
+        // ========== DADOS ==========
+        let expenses = [];
+
+        // Carregar dados salvos
+        function loadExpenses() {
+            const saved = localStorage.getItem('expenses');
+            if (saved) {
+                try {
+                    expenses = JSON.parse(saved);
+                } catch (e) {
+                    expenses = [];
+                }
+            }
+            updateUI();
+        }
+
+        // Salvar dados
+        function saveExpenses() {
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+        }
+
+        // ========== UI ==========
+        function updateUI() {
+            const listEl = document.getElementById('expenseList');
+            listEl.innerHTML = '';
+            let total = 0;
+
+            const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sorted.forEach((exp) => {
+                total += exp.amount;
+                const li = document.createElement('li');
+                li.className = 'expense-item';
+                li.innerHTML = `
+                    <div>
+                        <div><strong>${exp.local}</strong></div>
+                        <div class="date">${new Date(exp.date).toLocaleString('pt-BR')}</div>
+                    </div>
+                    <div>
+                        <span class="value">R$ ${exp.amount.toFixed(2)}</span>
+                        <button class="delete-btn" data-id="${exp.id}">🗑️</button>
+                    </div>
+                `;
+                listEl.appendChild(li);
+            });
+
+            document.getElementById('totalDisplay').innerText = `Total: R$ ${total.toFixed(2)}`;
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    deleteExpense(id);
+                });
+            });
+        }
+
+        // ========== ADICIONAR GASTO ==========
+        function addExpense(local, amount) {
+            const newExpense = {
+                id: Date.now().toString(),
+                date: new Date().toISOString(),
+                local: local.trim(),
+                amount: parseFloat(amount)
+            };
+            expenses.push(newExpense);
+            saveExpenses();
+            updateUI();
+        }
+
+        // ========== DELETAR GASTO ==========
+        function deleteExpense(id) {
+            expenses = expenses.filter(exp => exp.id !== id);
+            saveExpenses();
+            updateUI();
+        }
+
+        // ========== LIMPAR TUDO ==========
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja limpar todos os gastos?')) {
+                expenses = [];
+                saveExpenses();
+                updateUI();
+            }
+        });
+
+        // ========== ENTRADA MANUAL ==========
+        document.getElementById('manualAddBtn').addEventListener('click', () => {
+            const localInput = document.getElementById('manualLocal');
+            const valueInput = document.getElementById('manualValue');
+            const local = localInput.value.trim();
+            const value = parseFloat(valueInput.value);
+
+            if (!local) {
+                alert('Digite o local do gasto.');
+                return;
+            }
+            if (isNaN(value) || value <= 0) {
+                alert('Digite um valor válido.');
+                return;
+            }
+
+            addExpense(local, value);
+            localInput.value = '';
+            valueInput.value = '';
+            document.getElementById('status').innerText = `✅ Gasto adicionado: R$ ${value.toFixed(2)} em ${local}`;
+        });
+
+        // ========== RECONHECIMENTO DE VOZ ==========
+        const voiceBtn = document.getElementById('voiceBtn');
+        const statusEl = document.getElementById('status');
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            statusEl.innerText = 'Seu navegador não suporta reconhecimento de voz. Use a digitação manual.';
+            voiceBtn.disabled = true;
+        } else {
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            voiceBtn.addEventListener('click', () => {
+                // Verificar permissão antes de começar
+                navigator.permissions?.query({ name: 'microphone' }).then((permissionStatus) => {
+                    if (permissionStatus.state === 'denied') {
+                        statusEl.innerText = 'Microfone bloqueado. Use a digitação manual.';
+                        return;
+                    }
+                }).catch(() => {});
+
+                try {
+                    recognition.start();
+                    voiceBtn.classList.add('listening');
+                    statusEl.innerText = '🎤 Ouvindo... Fale seu gasto.';
+                } catch (e) {
+                    statusEl.innerText = 'Erro ao acessar microfone. Use a digitação.';
+                }
+            });
+
+            recognition.addEventListener('result', (event) => {
+                const last = event.results.length - 1;
+                const transcript = event.results[last][0].transcript.trim().toLowerCase();
+                statusEl.innerText = `Você disse: "${transcript}"`;
+                processVoiceInput(transcript);
+            });
+
+            recognition.addEventListener('error', (event) => {
+                if (event.error === 'not-allowed') {
+                    statusEl.innerText = 'Permissão negada. Use a digitação manual.';
+                } else {
+                    statusEl.innerText = 'Erro: ' + event.error;
+                }
+                voiceBtn.classList.remove('listening');
+            });
+
+            recognition.addEventListener('end', () => {
+                voiceBtn.classList.remove('listening');
+                if (!statusEl.innerText.includes('Você disse') && !statusEl.innerText.includes('✅')) {
+                    statusEl.innerText = 'Clique no botão e fale, ou digite abaixo.';
+                }
+            });
+        }
+
+        // ========== PROCESSAR TEXTO ==========
+        function processVoiceInput(text) {
+            const regex = /gastei\s+(\d+(?:[.,]\d+)?)\s*reais?\s*(?:no|na|em)?\s*(.+)/i;
+            const match = text.match(regex);
+
+            if (match) {
+                let amount = match[1].replace(',', '.');
+                amount = parseFloat(amount);
+                const local = match[2].trim();
+
+                if (isNaN(amount) || amount <= 0) {
+                    statusEl.innerText = 'Valor não reconhecido. Tente novamente.';
+                    return;
+                }
+
+                if (!local) {
+                    statusEl.innerText = 'Local não reconhecido. Tente novamente.';
+                    return;
+                }
+
+                addExpense(local, amount);
+                statusEl.innerText = `✅ Gasto adicionado: R$ ${amount.toFixed(2)} em ${local}`;
+            } else {
+                statusEl.innerText = 'Não entendi. Use: "gastei 50 reais no supermercado"';
+            }
+        }
+
+        // Carregar dados ao iniciar
+        loadExpenses();
+    </script>
+</body>
+</html>
