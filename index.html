@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gastos por Voz - Diagnóstico</title>
+    <title>Gastos por Voz</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,36 +11,64 @@
             margin: 0;
             padding: 20px;
             color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
         }
         .container {
             max-width: 500px;
-            margin: auto;
+            width: 100%;
             background: white;
             border-radius: 20px;
-            padding: 20px;
+            padding: 30px 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        h1 { text-align: center; color: #2c3e50; }
-        .total {
-            font-size: 2em;
             text-align: center;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .total-circle {
+            width: 150px;
+            height: 150px;
             background: #27ae60;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
             color: white;
-            padding: 15px;
-            border-radius: 15px;
-            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+        .total-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+        .total-value {
+            font-size: 2em;
+            font-weight: bold;
         }
         .voice-btn {
-            width: 100%;
-            padding: 20px;
-            font-size: 1.5em;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
             background: #3498db;
-            color: white;
             border: none;
-            border-radius: 50px;
             cursor: pointer;
-            margin: 20px 0;
-            transition: 0.2s;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+            transition: all 0.2s;
+        }
+        .voice-btn svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
         }
         .voice-btn.listening {
             background: #e74c3c;
@@ -48,100 +76,149 @@
         }
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
-        .debug-box {
-            background: #2c3e50;
-            color: #ecf0f1;
-            padding: 15px;
-            border-radius: 10px;
-            font-family: monospace;
+        .waves {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60px;
             margin: 20px 0;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            max-height: 200px;
-            overflow-y: auto;
         }
+        .wave {
+            width: 8px;
+            height: 30px;
+            background: #3498db;
+            margin: 0 3px;
+            border-radius: 40px;
+            animation: wave 1s ease-in-out infinite;
+            transform: scaleY(0.5);
+        }
+        .wave.active {
+            background: #e74c3c;
+        }
+        .wave:nth-child(2) { animation-delay: 0.1s; }
+        .wave:nth-child(3) { animation-delay: 0.2s; }
+        .wave:nth-child(4) { animation-delay: 0.3s; }
+        .wave:nth-child(5) { animation-delay: 0.4s; }
+        .wave:nth-child(6) { animation-delay: 0.5s; }
+        .wave:nth-child(7) { animation-delay: 0.6s; }
+        .wave:nth-child(8) { animation-delay: 0.7s; }
+        .wave:nth-child(9) { animation-delay: 0.8s; }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.5); }
+            50% { transform: scaleY(1.5); }
+        }
+
         .status {
-            text-align: center;
-            margin: 10px 0;
-            font-weight: bold;
-            color: #e67e22;
-        }
-        .last-expense {
-            background: #ecf0f1;
-            padding: 15px;
-            border-radius: 10px;
             margin: 20px 0;
+            font-size: 1.1em;
+            color: #7f8c8d;
+            min-height: 40px;
         }
         .nav-btn {
-            display: block;
-            text-align: center;
             background: #95a5a6;
             color: white;
-            text-decoration: none;
-            padding: 15px;
+            border: none;
             border-radius: 50px;
+            padding: 12px 25px;
+            font-size: 1em;
+            cursor: pointer;
             margin-top: 20px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .last-expense {
+            margin-top: 20px;
+            padding: 10px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            font-size: 0.9em;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🎤 Diagnóstico por Voz</h1>
-        
-        <div class="total" id="totalDisplay">R$ 0,00</div>
+        <h1>🎤 Gastos por Voz</h1>
 
-        <button class="voice-btn" id="voiceBtn">🎤 INICIAR ESCUTA</button>
-
-        <div class="status" id="status">Pronto. Clique no botão e fale.</div>
-
-        <div class="debug-box" id="debug">
-            [Aguardando comando de voz...]
+        <div class="total-circle">
+            <span class="total-label">Total</span>
+            <span class="total-value" id="totalDisplay">R$ 0</span>
         </div>
 
-        <div class="last-expense" id="lastExpense">
-            Nenhum gasto registrado ainda.
+        <!-- Botão de voz com microfone -->
+        <button class="voice-btn" id="voiceBtn">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5-3c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+        </button>
+
+        <!-- Animação de ondas (ativa durante a escuta) -->
+        <div class="waves" id="waves">
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
         </div>
 
+        <div class="status" id="status">Toque no microfone e fale seu gasto</div>
+
+        <!-- Último gasto adicionado -->
+        <div class="last-expense" id="lastExpense"></div>
+
+        <!-- Botão para ver tabela de gastos -->
         <a href="gastos.html" class="nav-btn">📋 Ver todos os gastos</a>
     </div>
 
     <script>
-        // ========== UTILITÁRIOS ==========
-        function addDebug(message) {
-            const debugEl = document.getElementById('debug');
-            const timestamp = new Date().toLocaleTimeString();
-            debugEl.innerHTML = `[${timestamp}] ${message}\n` + debugEl.innerHTML;
-            console.log(message);
-        }
-
         // ========== DADOS ==========
-        let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
+        let expenses = [];
 
-        function saveAndUpdate() {
-            localStorage.setItem('expenses', JSON.stringify(expenses));
+        // Carregar dados salvos
+        function loadExpenses() {
+            const saved = localStorage.getItem('expenses');
+            if (saved) {
+                try {
+                    expenses = JSON.parse(saved);
+                } catch (e) {
+                    expenses = [];
+                }
+            }
             updateTotal();
             updateLastExpense();
         }
 
+        // Salvar dados
+        function saveExpenses() {
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+        }
+
+        // Atualizar total na bolinha
         function updateTotal() {
             const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
             document.getElementById('totalDisplay').innerText = `R$ ${total.toFixed(2)}`;
         }
 
+        // Mostrar último gasto
         function updateLastExpense() {
             const last = expenses[expenses.length - 1];
             const lastEl = document.getElementById('lastExpense');
             if (last) {
                 const date = new Date(last.date).toLocaleString('pt-BR');
-                lastEl.innerHTML = `<strong>Último gasto:</strong><br>${last.local} - R$ ${last.amount.toFixed(2)}<br><small>${date}</small>`;
+                lastEl.innerHTML = `<strong>Último:</strong> ${last.local} - R$ ${last.amount.toFixed(2)}<br><small>${date}</small>`;
             } else {
-                lastEl.innerHTML = 'Nenhum gasto registrado ainda.';
+                lastEl.innerHTML = '';
             }
         }
 
+        // ========== ADICIONAR GASTO ==========
         function addExpense(local, amount) {
             const newExpense = {
                 id: Date.now().toString(),
@@ -150,140 +227,141 @@
                 amount: parseFloat(amount)
             };
             expenses.push(newExpense);
-            saveAndUpdate();
-            addDebug(`✅ GASTO ADICIONADO: ${local} - R$ ${amount.toFixed(2)}`);
+            saveExpenses();
+            updateTotal();
+            updateLastExpense();
         }
 
         // ========== RECONHECIMENTO DE VOZ ==========
         const voiceBtn = document.getElementById('voiceBtn');
         const statusEl = document.getElementById('status');
+        const waves = document.querySelectorAll('.wave');
+
+        function setListening(isListening) {
+            if (isListening) {
+                voiceBtn.classList.add('listening');
+                waves.forEach(w => w.classList.add('active'));
+                statusEl.innerText = '🎤 Ouvindo...';
+            } else {
+                voiceBtn.classList.remove('listening');
+                waves.forEach(w => w.classList.remove('active'));
+            }
+        }
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        
         if (!SpeechRecognition) {
-            statusEl.innerText = '❌ Navegador não suporta reconhecimento de voz';
+            statusEl.innerText = 'Seu navegador não suporta reconhecimento de voz.';
             voiceBtn.disabled = true;
-            addDebug('ERRO: API de voz não suportada');
         } else {
             const recognition = new SpeechRecognition();
             recognition.lang = 'pt-BR';
             recognition.continuous = false;
-            recognition.interimResults = true; // MUDAMOS PARA true PARA VER O QUE ESTÁ SENDO CAPTADO
-            recognition.maxAlternatives = 3;
+            recognition.interimResults = false; // Só resultados finais para evitar bugs
+            recognition.maxAlternatives = 1;
 
             voiceBtn.addEventListener('click', () => {
                 try {
                     recognition.start();
-                    voiceBtn.classList.add('listening');
-                    statusEl.innerText = '🎤 ESCUTANDO...';
-                    addDebug('🎤 Iniciou escuta...');
+                    setListening(true);
                 } catch (e) {
-                    addDebug('❌ ERRO AO INICIAR: ' + e.message);
+                    statusEl.innerText = 'Erro ao acessar microfone.';
                 }
-            });
-
-            // Captura resultados intermediários (enquanto fala)
-            recognition.addEventListener('speechstart', () => {
-                addDebug('🗣️ Detected: speech started');
-            });
-
-            recognition.addEventListener('speechend', () => {
-                addDebug('🤐 Detected: speech ended');
             });
 
             recognition.addEventListener('result', (event) => {
-                let interimTranscript = '';
-                let finalTranscript = '';
-
-                for (let i = event.resultIndex; i < event.results.length; i++) {
-                    const transcript = event.results[i][0].transcript;
-                    if (event.results[i].isFinal) {
-                        finalTranscript += transcript;
-                    } else {
-                        interimTranscript += transcript;
-                    }
-                }
-
-                if (interimTranscript) {
-                    statusEl.innerText = `🎤 Ouvindo: "${interimTranscript}"`;
-                }
-
-                if (finalTranscript) {
-                    statusEl.innerText = `✅ Você disse: "${finalTranscript}"`;
-                    addDebug(`📝 FINAL: "${finalTranscript}"`);
-                    processVoiceInput(finalTranscript);
-                }
+                const last = event.results.length - 1;
+                const transcript = event.results[last][0].transcript.trim();
+                statusEl.innerText = `Você disse: "${transcript}"`;
+                processVoiceInput(transcript);
             });
 
             recognition.addEventListener('error', (event) => {
-                addDebug(`❌ ERRO: ${event.error} - ${event.message}`);
-                statusEl.innerText = `Erro: ${event.error}`;
-                voiceBtn.classList.remove('listening');
+                if (event.error === 'not-allowed') {
+                    statusEl.innerText = 'Permissão negada. Verifique o microfone.';
+                } else {
+                    statusEl.innerText = 'Erro: ' + event.error;
+                }
+                setListening(false);
             });
 
             recognition.addEventListener('end', () => {
-                voiceBtn.classList.remove('listening');
+                setListening(false);
                 if (!statusEl.innerText.includes('✅')) {
-                    statusEl.innerText = 'Clique no botão e fale';
+                    statusEl.innerText = 'Toque no microfone e fale seu gasto';
                 }
-                addDebug('⏹️ Escuta finalizada');
             });
         }
 
-        // ========== PROCESSAR TEXTO ==========
+        // ========== PROCESSAR TEXTO (VERSÃO FLEXÍVEL) ==========
         function processVoiceInput(text) {
-            addDebug(`🔍 Processando: "${text}"`);
+            // Normaliza: remove pontuação, converte pra minúsculas
+            let cleanText = text.toLowerCase().replace(/[^\w\s]/g, ' ');
             
-            // Várias formas de falar
-            const patterns = [
-                /(?:gastei|comprei|paguei|gasto de)\s+(\d+(?:[.,]\d+)?)\s*reais?\s*(?:no|na|em)?\s*(.+)/i,
-                /(\d+(?:[.,]\d+)?)\s*reais?\s*(?:no|na|em)?\s*(.+)/i,
-                /(?:comprei|paguei)\s*(.+?)\s*(?:por|por\s*)?(\d+(?:[.,]\d+)?)\s*reais?/i
-            ];
-
-            let match = null;
-            for (let pattern of patterns) {
-                match = text.match(pattern);
-                if (match) break;
+            // Procura por números (ex: 50, 50.00, 50,00)
+            const numberRegex = /(\d+(?:[.,]\d+)?)/g;
+            const numbers = cleanText.match(numberRegex);
+            
+            if (!numbers) {
+                statusEl.innerText = 'Nenhum valor encontrado. Fale um número.';
+                return;
             }
 
-            if (match) {
-                let amount, local;
-                
-                // Detecta qual padrão casou
-                if (match[1] && match[2]) {
-                    amount = match[1].replace(',', '.');
-                    local = match[2].trim();
-                } else if (match[2] && match[3]) {
-                    amount = match[2].replace(',', '.');
-                    local = match[1].trim();
+            // Pega o primeiro número como valor
+            let amountStr = numbers[0].replace(',', '.');
+            let amount = parseFloat(amountStr);
+            
+            if (isNaN(amount) || amount <= 0) {
+                statusEl.innerText = 'Valor inválido.';
+                return;
+            }
+
+            // Agora, encontrar o local
+            // Estratégia: pegar tudo que vem depois do número (se houver)
+            // ou tudo antes do número (se a frase for tipo "mercado 50 reais")
+            
+            let local = '';
+            
+            // Divide o texto pelo número encontrado
+            const parts = cleanText.split(numbers[0]);
+            
+            if (parts.length > 1 && parts[1].trim().length > 0) {
+                // Caso: "gastei 50 no mercado" → parts[1] = "no mercado"
+                local = parts[1].trim();
+            } else if (parts.length > 0 && parts[0].trim().length > 0) {
+                // Caso: "mercado 50 reais" → parts[0] = "mercado"
+                local = parts[0].trim();
+            }
+            
+            // Remove palavras comuns que podem vir antes ou depois
+            local = local.replace(/^(gastei|comprei|paguei|de|em|no|na|por|para|ao|aos?|r\$|reais?)\s*/i, '');
+            local = local.replace(/\s+(reais?|r\$)$/i, '');
+            
+            // Se ainda assim local estiver vazio, tenta extrair de outra forma
+            if (!local || local.length < 2) {
+                // Última tentativa: pegar a frase inteira e remover o valor e palavras-chave
+                let fallback = cleanText
+                    .replace(numbers[0], '')
+                    .replace(/\b(gastei|comprei|paguei|de|em|no|na|por|para|ao|aos?|r\$|reais?)\b/g, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (fallback.length > 2) {
+                    local = fallback;
                 } else {
-                    addDebug('❌ Padrão não reconhecido');
+                    statusEl.innerText = 'Local não identificado. Tente incluir o local.';
                     return;
                 }
-
-                amount = parseFloat(amount);
-                
-                if (isNaN(amount) || amount <= 0) {
-                    addDebug('❌ Valor inválido: ' + match[1]);
-                    return;
-                }
-
-                if (!local || local.length < 3) {
-                    addDebug('❌ Local inválido: ' + local);
-                    return;
-                }
-
-                addExpense(local, amount);
-            } else {
-                addDebug('❌ Nenhum padrão encontrado no texto');
             }
+
+            // Capitaliza primeira letra
+            local = local.charAt(0).toUpperCase() + local.slice(1);
+            
+            // Adiciona o gasto
+            addExpense(local, amount);
+            statusEl.innerText = `✅ Adicionado: R$ ${amount.toFixed(2)} em ${local}`;
         }
 
         // Inicializar
-        updateTotal();
-        updateLastExpense();
-        addDebug('✅ App de diagnóstico carregado');
+        loadExpenses();
     </script>
 </body>
 </html>
