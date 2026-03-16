@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Gastos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .total-card {
+            background: #27ae60;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #3498db;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .delete-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .clear-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 25px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .back-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 25px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-bottom: 20px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .empty-message {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-btn">⬅️ Voltar</a>
+        <h1>📋 Histórico de Gastos</h1>
+
+        <div class="total-card" id="totalDisplay">R$ 0,00</div>
+
+        <table id="expenseTable">
+            <thead>
+                <tr>
+                    <th>Data/Hora</th>
+                    <th>Local</th>
+                    <th>Categoria</th>
+                    <th>Valor</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- preenchido via js -->
+            </tbody>
+        </table>
+
+        <button class="clear-btn" id="clearBtn">🧹 Limpar Todos os Gastos</button>
+    </div>
+
+    <script>
+        let expenses = [];
+
+        function loadExpenses() {
+            const saved = localStorage.getItem('expenses');
+            if (saved) {
+                try {
+                    expenses = JSON.parse(saved);
+                } catch (e) {
+                    expenses = [];
+                }
+            }
+            renderTable();
+        }
+
+        function saveExpenses() {
+            localStorage.setItem('expenses', JSON.stringify(expenses));
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const totalEl = document.getElementById('totalDisplay');
+            let total = 0;
+
+            tbody.innerHTML = '';
+
+            if (expenses.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-message">Nenhum gasto registrado.</td></tr>';
+                totalEl.innerText = 'R$ 0,00';
+                return;
+            }
+
+            // Ordenar por data decrescente
+            const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sorted.forEach(exp => {
+                total += exp.amount;
+                const date = new Date(exp.date).toLocaleString('pt-BR');
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>${exp.local}</td>
+                    <td>${exp.category || 'outros'}</td>
+                    <td>R$ ${exp.amount.toFixed(2)}</td>
+                    <td><button class="delete-btn" data-id="${exp.id}">🗑️</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            totalEl.innerText = `R$ ${total.toFixed(2)}`;
+
+            // Adicionar eventos de deletar
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    deleteExpense(id);
+                });
+            });
+        }
+
+        function deleteExpense(id) {
+            expenses = expenses.filter(exp => exp.id !== id);
+            saveExpenses();
+            renderTable();
+        }
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (confirm('Tem certeza que deseja limpar todos os gastos?')) {
+                expenses = [];
+                saveExpenses();
+                renderTable();
+            }
+        });
+
+        loadExpenses();
+    </script>
+</body>
+</html>
