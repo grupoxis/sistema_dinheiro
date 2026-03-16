@@ -4,190 +4,344 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meus Gastos</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-            color: #333;
+            background-color: #f8f9fa;
         }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
+        .container-custom {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card-total {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
             border-radius: 20px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3);
         }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .total-card {
-            background: #27ae60;
+        .table thead th {
+            background-color: #343a40;
             color: white;
-            padding: 20px;
+            font-weight: 500;
+        }
+        .btn-category {
+            border-radius: 50px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+        }
+        .category-badge {
+            background-color: #e9ecef;
+            color: #495057;
+            border-radius: 50px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.85rem;
+        }
+        .search-box {
+            max-width: 400px;
+        }
+        .footer-actions {
+            background-color: white;
             border-radius: 15px;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2em;
-            font-weight: bold;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th {
-            background: #3498db;
-            color: white;
-            padding: 10px;
-            text-align: left;
-        }
-        td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #ecf0f1;
-        }
-        .delete-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-        .clear-btn {
-            background: #95a5a6;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 25px;
-            font-size: 1em;
-            cursor: pointer;
-            margin-top: 20px;
-            width: 100%;
-        }
-        .back-btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 25px;
-            font-size: 1em;
-            cursor: pointer;
-            margin-bottom: 20px;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .empty-message {
-            text-align: center;
-            color: #7f8c8d;
-            padding: 30px;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <a href="index.html" class="back-btn">⬅️ Voltar</a>
-        <h1>📋 Histórico de Gastos</h1>
+    <div class="container py-4 container-custom">
+        <!-- Cabeçalho com voltar e título -->
+        <div class="d-flex align-items-center mb-4">
+            <a href="index.html" class="btn btn-outline-secondary rounded-circle me-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <h1 class="h3 mb-0 fw-bold"><i class="bi bi-receipt-cutoff me-2"></i>Histórico de Gastos</h1>
+        </div>
 
-        <div class="total-card" id="totalDisplay">R$ 0,00</div>
+        <!-- Cards de resumo -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card card-total border-0">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="bi bi-cash-stack display-4 me-3"></i>
+                        <div>
+                            <h6 class="text-white-50 mb-1">Total Geral</h6>
+                            <h2 class="mb-0" id="totalDisplay">R$ 0,00</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="footer-actions d-flex flex-wrap gap-2 align-items-center justify-content-between">
+                    <div class="d-flex gap-2">
+                        <span class="category-badge"><i class="bi bi-shop me-1"></i>Mercado</span>
+                        <span class="category-badge"><i class="bi bi-fuel-pump me-1"></i>Posto</span>
+                        <span class="category-badge"><i class="bi bi-controller me-1"></i>Lazer</span>
+                        <span class="category-badge"><i class="bi bi-three-dots"></i>Outros</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" id="exportCsvBtn">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar CSV
+                        </button>
+                        <button class="btn btn-danger" id="clearBtn">
+                            <i class="bi bi-trash3 me-1"></i>Limpar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <table id="expenseTable">
-            <thead>
-                <tr>
-                    <th>Data/Hora</th>
-                    <th>Local</th>
-                    <th>Categoria</th>
-                    <th>Valor</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <!-- preenchido via js -->
-            </tbody>
-        </table>
+        <!-- Filtros e busca -->
+        <div class="row g-3 mb-4 align-items-center">
+            <div class="col-md-6">
+                <div class="input-group search-box">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" class="form-control" id="searchInput" placeholder="Pesquisar local, valor, data...">
+                </div>
+            </div>
+            <div class="col-md-6 d-flex gap-2 justify-content-md-end">
+                <select class="form-select w-auto" id="categoryFilter">
+                    <option value="todas">Todas categorias</option>
+                    <option value="mercado">Mercado</option>
+                    <option value="posto">Posto de Gasolina</option>
+                    <option value="lazer">Lazer</option>
+                    <option value="outros">Outros</option>
+                </select>
+                <button class="btn btn-outline-secondary" id="resetFiltersBtn">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
+            </div>
+        </div>
 
-        <button class="clear-btn" id="clearBtn">🧹 Limpar Todos os Gastos</button>
+        <!-- Tabela de gastos -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Local</th>
+                                <th>Categoria</th>
+                                <th>Valor</th>
+                                <th style="width: 80px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- preenchido via js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rodapé com contador -->
+        <div class="d-flex justify-content-between align-items-center mt-3 text-muted small">
+            <span id="expenseCount">0 gastos</span>
+            <span>Atualizado em tempo real</span>
+        </div>
     </div>
 
-    <script>
-        let expenses = [];
+    <!-- Bootstrap JS (opcional para alguns componentes) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
+    <script>
+        // ========== DADOS ==========
+        let expenses = [];
+        let filteredExpenses = [];
+
+        // Categorias predefinidas
+        function detectCategory(local) {
+            const text = local.toLowerCase();
+            if (text.includes('mercado') || text.includes('supermercado') || text.includes('hiper') || text.includes('mercad')) return 'mercado';
+            if (text.includes('posto') || text.includes('gasolina') || text.includes('combustível') || text.includes('shell') || text.includes('petrobras')) return 'posto';
+            if (text.includes('lazer') || text.includes('cinema') || text.includes('bar') || text.includes('restaurante') || text.includes('pizza') || text.includes('show') || text.includes('teatro')) return 'lazer';
+            return 'outros';
+        }
+
+        // Carregar dados salvos
         function loadExpenses() {
             const saved = localStorage.getItem('expenses');
             if (saved) {
                 try {
                     expenses = JSON.parse(saved);
+                    // Adicionar categoria se não existir (para dados antigos)
+                    expenses = expenses.map(exp => ({
+                        ...exp,
+                        category: exp.category || detectCategory(exp.local)
+                    }));
                 } catch (e) {
                     expenses = [];
                 }
+            } else {
+                expenses = [];
             }
-            renderTable();
+            saveExpenses(); // para garantir que todos tenham categoria
+            applyFilters();
         }
 
+        // Salvar dados
         function saveExpenses() {
             localStorage.setItem('expenses', JSON.stringify(expenses));
         }
 
+        // Atualizar total e contagem
+        function updateTotals() {
+            const total = filteredExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+            document.getElementById('totalDisplay').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('expenseCount').innerText = `${filteredExpenses.length} gastos`;
+        }
+
+        // Renderizar tabela
         function renderTable() {
             const tbody = document.getElementById('tableBody');
-            const totalEl = document.getElementById('totalDisplay');
-            let total = 0;
-
-            tbody.innerHTML = '';
-
-            if (expenses.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-message">Nenhum gasto registrado.</td></tr>';
-                totalEl.innerText = 'R$ 0,00';
+            if (filteredExpenses.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-emoji-frown display-6 d-block mb-2"></i>
+                            Nenhum gasto encontrado
+                        </td>
+                    </tr>
+                `;
+                updateTotals();
                 return;
             }
 
-            // Ordenar por data decrescente
-            const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-            sorted.forEach(exp => {
-                total += exp.amount;
+            let html = '';
+            filteredExpenses.forEach(exp => {
                 const date = new Date(exp.date).toLocaleString('pt-BR');
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${date}</td>
-                    <td>${exp.local}</td>
-                    <td>${exp.category || 'outros'}</td>
-                    <td>R$ ${exp.amount.toFixed(2)}</td>
-                    <td><button class="delete-btn" data-id="${exp.id}">🗑️</button></td>
+                const categoryClass = {
+                    'mercado': 'success',
+                    'posto': 'warning',
+                    'lazer': 'info',
+                    'outros': 'secondary'
+                }[exp.category] || 'secondary';
+                
+                html += `
+                    <tr>
+                        <td><span class="fw-light">${date}</span></td>
+                        <td class="fw-medium">${exp.local}</td>
+                        <td>
+                            <span class="badge bg-${categoryClass} bg-opacity-25 text-dark rounded-pill px-3 py-2">
+                                <i class="bi ${exp.category === 'mercado' ? 'bi-shop' : exp.category === 'posto' ? 'bi-fuel-pump' : exp.category === 'lazer' ? 'bi-controller' : 'bi-three-dots'} me-1"></i>
+                                ${exp.category.charAt(0).toUpperCase() + exp.category.slice(1)}
+                            </span>
+                        </td>
+                        <td class="fw-bold text-success">R$ ${exp.amount.toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger rounded-circle delete-btn" data-id="${exp.id}" title="Excluir">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
                 `;
-                tbody.appendChild(row);
             });
-
-            totalEl.innerText = `R$ ${total.toFixed(2)}`;
+            tbody.innerHTML = html;
 
             // Adicionar eventos de deletar
             document.querySelectorAll('.delete-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    const id = e.target.getAttribute('data-id');
+                    const id = e.currentTarget.getAttribute('data-id');
                     deleteExpense(id);
                 });
             });
+
+            updateTotals();
         }
 
-        function deleteExpense(id) {
-            expenses = expenses.filter(exp => exp.id !== id);
-            saveExpenses();
+        // Aplicar filtros (busca e categoria)
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+
+            filteredExpenses = expenses.filter(exp => {
+                // Filtro de categoria
+                if (categoryFilter !== 'todas' && exp.category !== categoryFilter) return false;
+                
+                // Filtro de busca (local, valor, data)
+                if (searchTerm) {
+                    const dateStr = new Date(exp.date).toLocaleString('pt-BR').toLowerCase();
+                    const valueStr = exp.amount.toFixed(2);
+                    return exp.local.toLowerCase().includes(searchTerm) || 
+                           valueStr.includes(searchTerm) || 
+                           dateStr.includes(searchTerm);
+                }
+                return true;
+            });
+
             renderTable();
         }
 
+        // Deletar gasto
+        function deleteExpense(id) {
+            if (confirm('Remover este gasto?')) {
+                expenses = expenses.filter(exp => exp.id !== id);
+                saveExpenses();
+                applyFilters();
+            }
+        }
+
+        // Limpar todos
         document.getElementById('clearBtn').addEventListener('click', () => {
-            if (confirm('Tem certeza que deseja limpar todos os gastos?')) {
+            if (confirm('Tem certeza que deseja limpar TODOS os gastos?')) {
                 expenses = [];
                 saveExpenses();
-                renderTable();
+                applyFilters();
             }
         });
 
+        // Exportar CSV
+        function exportToCSV() {
+            if (expenses.length === 0) {
+                alert('Nenhum gasto para exportar.');
+                return;
+            }
+
+            // Ordenar por data (mais recente primeiro)
+            const sorted = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Cabeçalho
+            let csv = 'Data,Local,Categoria,Valor\n';
+            
+            sorted.forEach(exp => {
+                const date = new Date(exp.date).toLocaleString('pt-BR');
+                const local = `"${exp.local.replace(/"/g, '""')}"`; // escape aspas
+                const category = exp.category || 'outros';
+                const valor = exp.amount.toFixed(2).replace('.', ',');
+                csv += `${date},${local},${category},${valor}\n`;
+            });
+
+            // Criar link de download
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM para acentos
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `gastos_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Eventos de filtro
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('categoryFilter').addEventListener('change', applyFilters);
+        document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('categoryFilter').value = 'todas';
+            applyFilters();
+        });
+        document.getElementById('exportCsvBtn').addEventListener('click', exportToCSV);
+
+        // Inicializar
         loadExpenses();
+
+        // Opcional: atualizar quando a página receber foco (caso tenha adicionado na index)
+        window.addEventListener('focus', loadExpenses);
     </script>
 </body>
 </html>
